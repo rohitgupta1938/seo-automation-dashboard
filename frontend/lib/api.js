@@ -37,6 +37,8 @@ export const api = {
   register: (data) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   logout: () => apiFetch('/auth/logout', { method: 'POST' }),
   me: () => apiFetch('/auth/me'),
+  forgotPassword: (email) => apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  resetPassword: (token, newPassword) => apiFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
 
   // Admin Stats
   adminStats: () => apiFetch('/admin/stats'),

@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const { authenticate, requireAdmin } = require('../middleware/auth');
-const { register, login, logout, me } = require('../controllers/authController');
+const { register, login, logout, me, forgotPassword, resetPassword } = require('../controllers/authController');
 const { getClients, createClient, getClient, updateClient, deleteClient } = require('../controllers/clientController');
 const { getWebsites, createWebsite, getWebsite, updateWebsite, deleteWebsite } = require('../controllers/websiteController');
 const { getAudits, createAudit, getAudit, getAuditStatus, retryAudit, getAdminStats } = require('../controllers/auditController');
@@ -24,6 +24,8 @@ router.post('/auth/register', register);
 router.post('/auth/login', login);
 router.post('/auth/logout', authenticate, logout);
 router.get('/auth/me', authenticate, me);
+router.post('/auth/forgot-password', forgotPassword);
+router.post('/auth/reset-password', resetPassword);
 
 // Admin Stats
 router.get('/admin/stats', authenticate, requireAdmin, getAdminStats);

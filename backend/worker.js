@@ -1,5 +1,6 @@
 // worker.js — Standalone BullMQ worker process
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const { Worker } = require('bullmq');
 const { getBullMQConnection } = require('./src/config/redis');
@@ -11,6 +12,7 @@ const { getKeywordRankings } = require('./src/services/dataForSeoService');
 const { analyzeSchema } = require('./src/services/schemaValidator');
 const { analyzeOnPage } = require('./src/services/onPageAnalyzer');
 const { analyzeTechnical } = require('./src/services/technicalSeoAnalyzer');
+const { analyzeContent } = require('./src/services/contentAnalyzer');
 const { analyzeSEO } = require('./src/ai/seoAnalyzer');
 const { generatePDFReport } = require('./src/reports/pdfGenerator');
 const { sendWhatsApp } = require('./src/mocks/twilio.mock');
@@ -53,7 +55,7 @@ async function processAuditJob(job) {
     // Step 5: Schema Validation (45%)
     await updateProgress(45);
     logger.info('[5/12] Schema validation');
-    const schemaAnalysis = analyzeSchema(crawlData);
+    const schemaAnalysis = analyzeSchema(crawlData, website.businessType);
 
     // Step 6: On-Page Analysis (55%)
     await updateProgress(55);
@@ -65,21 +67,50 @@ async function processAuditJob(job) {
     logger.info('[7/12] Technical SEO checks');
     const technicalAnalysis = analyzeTechnical(crawlData);
 
+    // Step 7.5: Content SEO Analysis
+    logger.info('[7.5/12] Content analysis');
+    const contentAnalysis = analyzeContent(crawlData);
+
     // Step 8: Keyword Rankings (75%)
     await updateProgress(75);
     logger.info('[8/12] Keyword rankings');
-    const primaryKeyword = website.targetKeywords?.[0] || `${website.businessType} ${website.city}`;
+    const primaryKeyword = website.targetKeywords?.[0] || `${website.businessType} ${website.city || ''}`.trim() || 'website';
     const rankingsData = await getKeywordRankings(new URL(website.url).hostname, primaryKeyword);
 
-    // CWV data from PageSpeed
+    // CWV data from PageSpeed & Crawler Latency
+    const basePerfScore = Math.round((pageSpeedData.categories?.performance?.score || 0.65) * 100);
+    // Factor in crawl response time
+    const crawlResponseTime = crawlData.responseTime || 0;
+    let latencyFactor = 0;
+    if (crawlResponseTime > 0 && crawlResponseTime < 400) latencyFactor = 5;
+    else if (crawlResponseTime > 1500) latencyFactor = -15;
+    else if (crawlResponseTime > 800) latencyFactor = -5;
+
+    const cwvScore = Math.max(10, Math.min(100, basePerfScore + latencyFactor));
+
     const cwvData = {
       lcp: pageSpeedData.audits?.['largest-contentful-paint'],
       cls: pageSpeedData.audits?.['cumulative-layout-shift'],
       inp: pageSpeedData.audits?.['interaction-to-next-paint'],
       renderBlocking: pageSpeedData.audits?.['render-blocking-resources'],
       unusedJs: pageSpeedData.audits?.['unused-javascript'],
-      performanceScore: Math.round((pageSpeedData.categories?.performance?.score || 0) * 100),
+      performanceScore: cwvScore,
+      responseTime: crawlResponseTime,
     };
+
+    // Calculate genuine weighted benchmark scores from real analyzers
+    const technicalScore = technicalAnalysis.score;
+    const onPageScore = onPageAnalysis.score;
+    const contentScore = contentAnalysis.score;
+    const schemaScore = schemaAnalysis.score;
+
+    const overallScore = Math.max(0, Math.min(100, Math.round(
+      (technicalScore * 0.25) +
+      (onPageScore * 0.25) +
+      (contentScore * 0.20) +
+      (cwvScore * 0.15) +
+      (schemaScore * 0.15)
+    )));
 
     // Step 9: Claude AI Analysis (85%)
     await updateProgress(85);
@@ -91,26 +122,35 @@ async function processAuditJob(job) {
       state: website.state,
       onPageData: onPageAnalysis,
       technicalData: technicalAnalysis,
+      contentData: contentAnalysis,
       cwvData,
       schemaData: schemaAnalysis,
       gscData,
       rankingsData,
+      computedScores: {
+        overallScore,
+        technicalScore,
+        onPageScore,
+        contentScore,
+        cwvScore,
+        schemaScore,
+      },
     });
 
     // Step 10: Persist to Database (90%)
     await updateProgress(90);
-    logger.info('[10/12] Persisting audit results');
+    logger.info('[10/12] Persisting audit results', { overallScore, technicalScore, onPageScore, contentScore, schemaScore });
 
     const auditResult = await prisma.auditResult.upsert({
       where: { auditId },
       create: {
         auditId,
-        overallScore: aiAnalysis.overall_score,
-        technicalScore: aiAnalysis.score_breakdown?.technical || technicalAnalysis.score,
-        onPageScore: aiAnalysis.score_breakdown?.on_page || onPageAnalysis.score,
-        contentScore: aiAnalysis.score_breakdown?.content || 50,
-        cwvScore: aiAnalysis.score_breakdown?.core_web_vitals || cwvData.performanceScore,
-        schemaScore: aiAnalysis.score_breakdown?.schema || schemaAnalysis.score,
+        overallScore,
+        technicalScore,
+        onPageScore,
+        contentScore,
+        cwvScore,
+        schemaScore,
         criticalIssues: aiAnalysis.critical_issues || [],
         importantIssues: aiAnalysis.important_issues || [],
         quickWins: aiAnalysis.quick_wins || [],
@@ -125,12 +165,12 @@ async function processAuditJob(job) {
         rawAiResponse: aiAnalysis,
       },
       update: {
-        overallScore: aiAnalysis.overall_score,
-        technicalScore: aiAnalysis.score_breakdown?.technical || technicalAnalysis.score,
-        onPageScore: aiAnalysis.score_breakdown?.on_page || onPageAnalysis.score,
-        contentScore: aiAnalysis.score_breakdown?.content || 50,
-        cwvScore: aiAnalysis.score_breakdown?.core_web_vitals || cwvData.performanceScore,
-        schemaScore: aiAnalysis.score_breakdown?.schema || schemaAnalysis.score,
+        overallScore,
+        technicalScore,
+        onPageScore,
+        contentScore,
+        cwvScore,
+        schemaScore,
         criticalIssues: aiAnalysis.critical_issues || [],
         importantIssues: aiAnalysis.important_issues || [],
         quickWins: aiAnalysis.quick_wins || [],

@@ -8,6 +8,7 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:worker": "cd backend && npm run worker:dev",
     "dev:frontend": "cd frontend && npm run dev",
+    "db:validate": "cd backend && npx prisma validate",
     "db:generate": "cd backend && npx prisma generate",
     "db:push": "cd backend && npx prisma db push",
     "db:seed": "cd backend && node src/utils/seed.js"

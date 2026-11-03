@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "worker": "node worker.js",
     "worker:dev": "nodemon worker.js",
+    "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",

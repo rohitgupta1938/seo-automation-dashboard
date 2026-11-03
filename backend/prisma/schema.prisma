@@ -32,19 +32,22 @@ enum NotificationType {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  password     String
-  name         String
-  role         Role     @default(CLIENT)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  role             Role      @default(CLIENT)
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   client       Client?
   notifications Notification[]
 
   @@index([email])
   @@index([role])
+  @@index([resetToken])
 }
 
 model Client {

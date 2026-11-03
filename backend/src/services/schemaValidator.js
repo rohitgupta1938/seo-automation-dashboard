@@ -1,23 +1,33 @@
 // src/services/schemaValidator.js
 const logger = require('../config/logger');
 
-const IMPORTANT_SCHEMA_TYPES = ['LocalBusiness', 'Dentist', 'MedicalOrganization', 'Organization', 'WebPage', 'BreadcrumbList', 'FAQPage'];
+const IMPORTANT_SCHEMA_TYPES = [
+  'LocalBusiness', 'Dentist', 'MedicalOrganization', 'Organization',
+  'WebPage', 'WebSite', 'BreadcrumbList', 'FAQPage', 'Product',
+  'Store', 'Service', 'Article', 'Person', 'ProfilePage', 'SoftwareApplication', 'Movie'
+];
+
 const REQUIRED_PROPS = {
   LocalBusiness: ['name', 'address', 'telephone'],
   Dentist: ['name', 'address', 'telephone'],
+  Store: ['name', 'address'],
   Organization: ['name', 'url'],
+  Person: ['name', 'url'],
+  Product: ['name', 'offers'],
+  WebSite: ['name', 'url'],
+  Article: ['headline', 'author'],
 };
 
 function validateSchemaBlock(block) {
   const type = block['@type'];
   const issues = [];
 
-  if (!block['@context']) issues.push('Missing @context');
-  if (!type) { issues.push('Missing @type'); return { type: 'unknown', issues, valid: false }; }
+  if (!block['@context']) issues.push('Missing @context property');
+  if (!type) { issues.push('Missing @type property'); return { type: 'unknown', issues, valid: false }; }
 
   const required = REQUIRED_PROPS[type] || [];
   for (const prop of required) {
-    if (!block[prop]) issues.push(`Missing required property: ${prop}`);
+    if (!block[prop]) issues.push(`Type "${type}" is missing required property: ${prop}`);
   }
 
   return {
@@ -26,13 +36,11 @@ function validateSchemaBlock(block) {
     issues,
     valid: issues.length === 0,
     hasName: !!block.name,
-    hasAddress: !!block.address,
-    hasTelephone: !!block.telephone,
     hasUrl: !!block.url,
   };
 }
 
-function analyzeSchema(crawlData) {
+function analyzeSchema(crawlData, businessType = 'general') {
   const { mainPage, pages } = crawlData;
   const allJsonLd = [];
 
@@ -47,7 +55,7 @@ function analyzeSchema(crawlData) {
       hasStructuredData: false,
       schemaCount: 0,
       schemas: [],
-      issues: ['No structured data (JSON-LD) found'],
+      issues: ['No Schema.org structured data (JSON-LD) found on crawled pages'],
       hasLocalBusiness: false,
       score: 0,
     };
@@ -58,16 +66,22 @@ function analyzeSchema(crawlData) {
     return validateSchemaBlock(block);
   });
 
-  const hasLocalBusiness = schemas.some(s => ['LocalBusiness', 'Dentist', 'MedicalOrganization'].includes(s.type));
-  const invalidCount = schemas.filter(s => !s.valid).length;
-  const score = Math.max(0, 100 - (invalidCount * 20) - (hasLocalBusiness ? 0 : 30));
+  const validCount = schemas.filter(s => s.valid).length;
+  const hasRelevantType = schemas.some(s => s.isImportantType);
+
+  let score = 40; // baseline for having JSON-LD
+  if (hasRelevantType) score += 30;
+  if (validCount === schemas.length) score += 30;
+  else score -= (schemas.length - validCount) * 15;
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
 
   return {
     hasStructuredData: true,
     schemaCount: schemas.length,
     schemas,
     issues: schemas.flatMap(s => s.issues || []),
-    hasLocalBusiness,
+    hasLocalBusiness: schemas.some(s => ['LocalBusiness', 'Dentist', 'Store', 'MedicalOrganization'].includes(s.type)),
     score,
   };
 }

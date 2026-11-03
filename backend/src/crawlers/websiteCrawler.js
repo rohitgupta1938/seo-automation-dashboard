@@ -20,42 +20,70 @@ function isSafeUrl(url) {
 async function fetchPage(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CRAWL_TIMEOUT);
+  const startTime = Date.now();
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'SEO-Dashboard-Crawler/1.0 (audit bot)', 'Accept': 'text/html,application/xhtml+xml' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 (SEO-Dashboard-AuditBot/1.0)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
       redirect: 'follow',
     });
+    const responseTime = Date.now() - startTime;
     clearTimeout(timer);
-    return { ok: res.ok, status: res.status, html: await res.text(), url: res.url, finalUrl: res.url };
+    return { ok: res.ok, status: res.status, html: await res.text(), url: res.url, finalUrl: res.url, responseTime };
   } catch (error) {
     clearTimeout(timer);
     throw error;
   }
 }
 
-function extractPageData(html, pageUrl) {
+function extractPageData(html, pageUrl, responseTime = 0) {
   const $ = cheerio.load(html);
   const baseUrl = new URL(pageUrl);
 
   const title = $('title').first().text().trim();
-  const metaDescription = $('meta[name="description"]').attr('content') || '';
+  const metaDescription = $('meta[name="description"]').attr('content') || $('meta[property="og:description"]').attr('content') || '';
   const canonical = $('link[rel="canonical"]').attr('href') || '';
   const metaRobots = $('meta[name="robots"]').attr('content') || '';
   const lang = $('html').attr('lang') || '';
+  const viewport = $('meta[name="viewport"]').attr('content') || '';
+  const charset = $('meta[charset]').attr('charset') || $('meta[http-equiv="Content-Type"]').attr('content') || '';
 
-  const h1s = [];
-  $('h1').each((_, el) => h1s.push($(el).text().trim()));
-  const h2s = [];
-  $('h2').each((_, el) => h2s.push($(el).text().trim()));
+  // Open Graph metadata
+  const openGraph = {
+    title: $('meta[property="og:title"]').attr('content') || $('meta[name="og:title"]').attr('content') || '',
+    description: $('meta[property="og:description"]').attr('content') || $('meta[name="og:description"]').attr('content') || '',
+    image: $('meta[property="og:image"]').attr('content') || $('meta[name="og:image"]').attr('content') || '',
+    type: $('meta[property="og:type"]').attr('content') || $('meta[name="og:type"]').attr('content') || '',
+  };
 
+  // Full Headings extraction (H1–H6)
+  const headings = {
+    h1: [], h2: [], h3: [], h4: [], h5: [], h6: []
+  };
+  $('h1').each((_, el) => { const t = $(el).text().trim(); if (t) headings.h1.push(t); });
+  $('h2').each((_, el) => { const t = $(el).text().trim(); if (t) headings.h2.push(t); });
+  $('h3').each((_, el) => { const t = $(el).text().trim(); if (t) headings.h3.push(t); });
+  $('h4').each((_, el) => { const t = $(el).text().trim(); if (t) headings.h4.push(t); });
+  $('h5').each((_, el) => { const t = $(el).text().trim(); if (t) headings.h5.push(t); });
+  $('h6').each((_, el) => { const t = $(el).text().trim(); if (t) headings.h6.push(t); });
+
+  const h1s = headings.h1;
+  const h2s = headings.h2;
+
+  // Images & Alt attributes
   const images = [];
   const imagesWithMissingAlt = [];
   $('img').each((_, el) => {
-    const src = $(el).attr('src') || '';
+    const src = $(el).attr('src') || $(el).attr('data-src') || '';
     const alt = $(el).attr('alt');
     images.push({ src, alt: alt || '' });
-    if (!alt || alt.trim() === '') imagesWithMissingAlt.push(src);
+    if (alt === undefined || alt === null || alt.trim() === '') {
+      imagesWithMissingAlt.push(src || '(empty-src)');
+    }
   });
 
   const internalLinks = [];
@@ -72,7 +100,10 @@ function extractPageData(html, pageUrl) {
     } catch {}
   });
 
-  const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+  // Remove scripts, styles, noscript, svg from body text calculation for authentic readability
+  const bodyClone = $('body').clone();
+  bodyClone.find('script, style, noscript, svg').remove();
+  const bodyText = bodyClone.text().replace(/\s+/g, ' ').trim();
   const wordCount = bodyText.split(' ').filter(w => w.length > 0).length;
 
   // JSON-LD extraction
@@ -93,6 +124,10 @@ function extractPageData(html, pageUrl) {
     canonical,
     metaRobots,
     lang,
+    viewport,
+    charset,
+    openGraph,
+    headings,
     h1s,
     h2s,
     images,
@@ -102,6 +137,7 @@ function extractPageData(html, pageUrl) {
     wordCount,
     jsonLdBlocks,
     isNoIndex,
+    responseTime,
   };
 }
 
@@ -151,11 +187,11 @@ async function crawlWebsite(targetUrl) {
     visited.add(url);
 
     try {
-      const { html, status, finalUrl } = await fetchPage(url);
+      const { html, status, finalUrl, responseTime } = await fetchPage(url);
       httpStatus = status;
       if (finalUrl !== url) redirectDetected = true;
 
-      const pageData = extractPageData(html, finalUrl);
+      const pageData = extractPageData(html, finalUrl, responseTime);
       pages.push(pageData);
       if (pages.length === 1) mainPageData = pageData;
 
@@ -174,6 +210,13 @@ async function crawlWebsite(targetUrl) {
     }
   }
 
+  // Gracefully handle crawl failures
+  if (pages.length === 0) {
+    const errorMsg = mainPageData?.error || (httpStatus ? `HTTP ${httpStatus}` : 'Connection timed out or host unreachable');
+    logger.error('Target website crawl failed completely', { url: targetUrl, error: errorMsg });
+    throw new Error(`Unable to crawl target website (${targetUrl}): ${errorMsg}`);
+  }
+
   const [robotsTxt, sitemapXml] = await Promise.all([
     checkRobotsTxt(targetUrl),
     checkSitemapXml(targetUrl),
@@ -185,7 +228,9 @@ async function crawlWebsite(targetUrl) {
   const descriptions = pages.map(p => p.metaDescription).filter(Boolean);
   const duplicateDescriptions = descriptions.filter((d, i) => descriptions.indexOf(d) !== i);
 
-  logger.info('Crawl complete', { url: targetUrl, pagesFound: pages.length });
+  const avgResponseTime = pages.length > 0 ? Math.round(pages.reduce((acc, p) => acc + (p.responseTime || 0), 0) / pages.length) : 0;
+
+  logger.info('Crawl complete', { url: targetUrl, pagesFound: pages.length, avgResponseTime });
 
   return {
     mainPage: mainPageData,
@@ -194,6 +239,7 @@ async function crawlWebsite(targetUrl) {
     httpStatus,
     isHttps,
     redirectDetected,
+    responseTime: avgResponseTime,
     robotsTxt,
     sitemapXml,
     duplicateTitles,

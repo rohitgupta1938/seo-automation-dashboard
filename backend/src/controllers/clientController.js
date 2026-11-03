@@ -2,6 +2,7 @@
 const { prisma } = require('../config/database');
 const bcrypt = require('bcryptjs');
 const logger = require('../config/logger');
+const { sendWelcomeEmail } = require('../notifications/emailService');
 
 async function getClients(req, res) {
   try {
@@ -58,6 +59,18 @@ async function createClient(req, res) {
     });
 
     logger.info('Client created by admin', { clientId: client.id, adminId: req.user.id });
+
+    // Send welcome email with login credentials
+    sendWelcomeEmail({
+      recipientEmail: email,
+      clientName: name,
+      temporaryPassword: password,
+      companyName: companyName || name,
+      phone: phone || null,
+    }).catch(err => {
+      logger.error('Failed to send welcome email', { error: err.message, clientId: client.id });
+    });
+
     res.status(201).json({ success: true, client });
   } catch (error) {
     logger.error('Create client error', { error: error.message });

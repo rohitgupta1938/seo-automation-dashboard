@@ -23,7 +23,7 @@ async function getAudits(req, res) {
         where,
         include: {
           website: { select: { id: true, url: true, name: true, clientId: true } },
-          result: { select: { overallScore: true, technicalScore: true, onPageScore: true } },
+          result: { select: { overallScore: true, technicalScore: true, onPageScore: true, contentScore: true, cwvScore: true, schemaScore: true } },
           report: { select: { id: true, fileName: true } },
         },
         orderBy: { createdAt: 'desc' },

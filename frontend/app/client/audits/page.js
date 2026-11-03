@@ -6,7 +6,7 @@ import { formatDateTime, getStatusBadge, getScoreColor } from '../../../lib/util
 import AuditProgress from '../../../components/shared/AuditProgress';
 import RecommendationCard from '../../../components/shared/RecommendationCard';
 import { toast } from 'sonner';
-import { Plus, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Search, X, AlertTriangle, Download, Zap, AlertCircle } from 'lucide-react';
 
 function Modal({ title, onClose, children }) {
   return (
@@ -70,11 +70,23 @@ export default function ClientAuditsPage() {
   }
 
   async function toggleExpand(audit) {
-    if (expandedAudit === audit.id) { setExpandedAudit(null); setExpandedData(null); return; }
+    if (expandedAudit === audit.id) {
+      setExpandedAudit(null);
+      setExpandedData(null);
+      return;
+    }
     setExpandedAudit(audit.id);
     if (audit.status === 'COMPLETED') {
       const data = await api.getAudit(audit.id).catch(() => null);
-      setExpandedData(data?.audit?.result);
+      if (data?.audit?.result) {
+        setExpandedData({
+          ...data.audit.result,
+          report: data.audit.report,
+          website: data.audit.website,
+        });
+      }
+    } else {
+      setExpandedData(null);
     }
   }
 
@@ -111,7 +123,11 @@ export default function ClientAuditsPage() {
                     <p className="font-medium text-slate-800">{audit.website?.name}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusBadge(audit.status)}`}>{audit.status}</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{formatDateTime(audit.createdAt)}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs text-slate-400 font-mono truncate max-w-sm">{audit.website?.url}</span>
+                    <span className="text-xs text-slate-400">•</span>
+                    <p className="text-xs text-slate-500">{formatDateTime(audit.createdAt)}</p>
+                  </div>
                 </div>
 
                 {['WAITING', 'ACTIVE'].includes(audit.status) ? (
@@ -127,20 +143,138 @@ export default function ClientAuditsPage() {
                 {expandedAudit === audit.id ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
               </div>
 
-              {expandedAudit === audit.id && expandedData && (
-                <div className="border-t border-slate-200 p-5">
-                  {expandedData.executiveSummary && (
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
-                      <p className="text-sm text-blue-800">{expandedData.executiveSummary}</p>
-                    </div>
-                  )}
-                  {Array.isArray(expandedData.recommendations) && expandedData.recommendations.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-slate-700 mb-3">Recommendations</h4>
-                      <div className="space-y-3">
-                        {expandedData.recommendations.map((rec, i) => <RecommendationCard key={i} rec={rec} />)}
+              {expandedAudit === audit.id && (
+                <div className="border-t border-slate-200 p-6 bg-slate-50/50 space-y-6">
+                  {/* FAILED STATUS BANNER */}
+                  {audit.status === 'FAILED' && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                      <AlertCircle className="text-red-500 mt-0.5 shrink-0" size={20} />
+                      <div>
+                        <h4 className="text-sm font-semibold text-red-800">Audit Failed</h4>
+                        <p className="text-xs text-red-600 mt-1">
+                          {audit.errorMessage || 'Unable to crawl website. Connection failed or host unreachable. Please verify the URL and try again.'}
+                        </p>
                       </div>
                     </div>
+                  )}
+
+                  {/* ACTIVE / WAITING PROGRESS */}
+                  {['WAITING', 'ACTIVE'].includes(audit.status) && (
+                    <div className="bg-white border border-slate-200 rounded-xl p-6 text-center">
+                      <div className="max-w-md mx-auto space-y-3">
+                        <h4 className="text-sm font-semibold text-slate-800">Crawl & Analysis in Progress</h4>
+                        <AuditProgress progress={audit.progress || 0} status={audit.status} />
+                        <p className="text-xs text-slate-500">
+                          Fetching real page metadata, technical signals, performance metrics, and generating site-specific recommendations...
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* COMPLETED AUDIT DATA */}
+                  {audit.status === 'COMPLETED' && expandedData && (
+                    <>
+                      {/* SCORE BREAKDOWN GRID */}
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">Technical</p>
+                          <p className={`text-xl font-bold ${getScoreColor(expandedData.technicalScore)}`}>
+                            {expandedData.technicalScore}<span className="text-xs text-slate-400 font-normal">/100</span>
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">On-Page</p>
+                          <p className={`text-xl font-bold ${getScoreColor(expandedData.onPageScore)}`}>
+                            {expandedData.onPageScore}<span className="text-xs text-slate-400 font-normal">/100</span>
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">Content</p>
+                          <p className={`text-xl font-bold ${getScoreColor(expandedData.contentScore)}`}>
+                            {expandedData.contentScore}<span className="text-xs text-slate-400 font-normal">/100</span>
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 text-center">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">Core Web Vitals</p>
+                          <p className={`text-xl font-bold ${getScoreColor(expandedData.cwvScore)}`}>
+                            {expandedData.cwvScore}<span className="text-xs text-slate-400 font-normal">/100</span>
+                          </p>
+                        </div>
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mb-1">Schema</p>
+                          <p className={`text-xl font-bold ${getScoreColor(expandedData.schemaScore)}`}>
+                            {expandedData.schemaScore}<span className="text-xs text-slate-400 font-normal">/100</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* EXECUTIVE SUMMARY */}
+                      {expandedData.executiveSummary && (
+                        <div className="bg-blue-50/80 border border-blue-100 rounded-xl p-4">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-900 mb-1">Executive Summary</h4>
+                          <p className="text-sm text-blue-800 leading-relaxed">{expandedData.executiveSummary}</p>
+                        </div>
+                      )}
+
+                      {/* CRITICAL & IMPORTANT ISSUES */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Array.isArray(expandedData.criticalIssues) && expandedData.criticalIssues.length > 0 && (
+                          <div className="bg-white border border-red-100 rounded-xl p-4">
+                            <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                              <AlertTriangle size={15} /> Critical Issues ({expandedData.criticalIssues.length})
+                            </h4>
+                            <ul className="space-y-2 text-xs text-slate-700">
+                              {expandedData.criticalIssues.map((issue, idx) => (
+                                <li key={idx} className="flex items-start gap-2 bg-red-50/50 p-2 rounded-lg border border-red-50">
+                                  <span className="text-red-500 font-bold">•</span>
+                                  <span>{typeof issue === 'string' ? issue : JSON.stringify(issue)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {Array.isArray(expandedData.quickWins) && expandedData.quickWins.length > 0 && (
+                          <div className="bg-white border border-emerald-100 rounded-xl p-4">
+                            <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                              <Zap size={15} /> Quick Wins ({expandedData.quickWins.length})
+                            </h4>
+                            <ul className="space-y-2 text-xs text-slate-700">
+                              {expandedData.quickWins.map((win, idx) => (
+                                <li key={idx} className="flex items-start gap-2 bg-emerald-50/50 p-2 rounded-lg border border-emerald-50">
+                                  <span className="text-emerald-500 font-bold">✓</span>
+                                  <span>{typeof win === 'string' ? win : JSON.stringify(win)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* RECOMMENDATIONS */}
+                      {Array.isArray(expandedData.recommendations) && expandedData.recommendations.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-800 mb-3 text-sm">Site-Specific Recommendations</h4>
+                          <div className="space-y-3">
+                            {expandedData.recommendations.map((rec, i) => <RecommendationCard key={i} rec={rec} />)}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* PDF REPORT DOWNLOAD BUTTON IF REPORT EXISTS */}
+                      {expandedData.report && (
+                        <div className="flex justify-end pt-2">
+                          <a
+                            href={api.downloadReport(expandedData.report.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium px-4 py-2 rounded-xl transition shadow-sm"
+                          >
+                            <Download size={14} /> Download PDF Audit Report
+                          </a>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
