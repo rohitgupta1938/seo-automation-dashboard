@@ -32,14 +32,15 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
-        <p className="text-slate-500 mt-0.5 text-sm">{reports.length} generated reports</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Reports</h1>
+        <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">{reports.length} generated reports</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Website</th>
@@ -90,6 +91,7 @@ export default function AdminReportsPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

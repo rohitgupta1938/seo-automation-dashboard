@@ -168,14 +168,14 @@ export default function WebsitesPage() {
   const totalPages = Math.ceil(total / 15);
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Websites</h1>
-          <p className="text-slate-500 mt-0.5 text-sm">{total} total websites</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Websites</h1>
+          <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">{total} total websites</p>
         </div>
         <button onClick={openAdd}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition">
+          className="flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition shrink-0 shadow-sm">
           <Plus size={18} /> Add Website
         </button>
       </div>
@@ -183,11 +183,12 @@ export default function WebsitesPage() {
       <div className="mb-4">
         <input type="text" placeholder="Search websites..." value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm w-64 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white" />
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Website</th>
@@ -239,6 +240,7 @@ export default function WebsitesPage() {
             )}
           </tbody>
         </table>
+        </div>
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t border-slate-100 flex justify-between items-center">
             <p className="text-sm text-slate-500">Page {page} of {totalPages}</p>

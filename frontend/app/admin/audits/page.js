@@ -10,12 +10,12 @@ import { Plus, RefreshCw, X, Activity, Filter } from 'lucide-react';
 function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="font-semibold text-slate-900">{title}</h2>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-slate-200">
+          <h2 className="font-semibold text-slate-900 text-sm sm:text-base">{title}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>
   );
@@ -97,19 +97,19 @@ export default function AuditsPage() {
   const totalPages = Math.ceil(total / 15);
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Audits</h1>
-          <p className="text-slate-500 mt-0.5 text-sm">{total} total audits</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Audits</h1>
+          <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">{total} total audits</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <div className="relative">
             <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <select
               value={statusFilter}
               onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-              className="pl-8 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+              className="pl-8 pr-4 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
             >
               <option value="">All Status</option>
               {['WAITING', 'ACTIVE', 'COMPLETED', 'FAILED', 'DELAYED'].map(s => (
@@ -119,15 +119,16 @@ export default function AuditsPage() {
           </div>
           <button
             onClick={openStartModal}
-            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition"
+            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-xl font-medium text-xs sm:text-sm transition shadow-sm"
           >
             <Plus size={18} /> Start Audit
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Website</th>
@@ -199,6 +200,7 @@ export default function AuditsPage() {
             )}
           </tbody>
         </table>
+        </div>
 
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">

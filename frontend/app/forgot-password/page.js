@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <p className="text-slate-400 mt-1">SEO Automation Dashboard</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
           {submitted ? (
             <div className="text-center py-4 space-y-4">
               <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600">

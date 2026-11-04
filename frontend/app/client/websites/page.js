@@ -11,13 +11,11 @@ function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="font-semibold text-slate-900">{title}</h2>
-          <button type="button" onClick={onClose}>
-            <X size={20} className="text-slate-400" />
-          </button>
+        <div className="flex items-center justify-between p-5 sm:p-6 border-b">
+          <h2 className="font-semibold text-slate-900 text-sm sm:text-base">{title}</h2>
+          <button type="button" onClick={onClose}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-5 sm:p-6">{children}</div>
       </div>
     </div>
   );
@@ -164,11 +162,14 @@ export default function ClientWebsitesPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">
-          My Websites
-        </h1>
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+            My Websites
+          </h1>
+          <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">Manage websites registered for SEO audits</p>
+        </div>
 
         <button
           onClick={() => {
@@ -182,7 +183,7 @@ export default function ClientWebsitesPage() {
               targetKeywords: ''
             });
           }}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition"
+          className="flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition shrink-0 shadow-sm"
         >
           <Plus size={18} /> Add Website
         </button>

@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
           <p className="text-slate-400 mt-1">SEO Automation Dashboard</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
           <Suspense fallback={
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />

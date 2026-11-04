@@ -30,8 +30,11 @@ export default function ClientNotificationsPage() {
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Notifications</h1>
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Notifications</h1>
+        <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">Audit alerts and report delivery updates</p>
+      </div>
       <div className="space-y-3">
         {loading ? Array(4).fill(0).map((_, i) => <div key={i} className="bg-white rounded-xl border p-4 animate-pulse h-16" />) :
           notifications.length === 0 ? (

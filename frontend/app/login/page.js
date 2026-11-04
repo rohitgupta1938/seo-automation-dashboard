@@ -40,7 +40,7 @@ export default function LoginPage() {
           <p className="text-slate-400 mt-1">Edgelink Technology</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
           <h2 className="text-xl font-semibold text-slate-800 mb-6">Sign in to your account</h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

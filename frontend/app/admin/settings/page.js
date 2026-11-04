@@ -7,10 +7,10 @@ export default function AdminSettingsPage() {
   const { user } = useAuth();
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500 mt-0.5 text-sm">System configuration and information</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
+        <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">System configuration and information</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

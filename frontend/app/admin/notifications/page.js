@@ -42,11 +42,11 @@ export default function AdminNotificationsPage() {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Notifications</h1>
-          {unreadCount > 0 && <p className="text-slate-500 mt-0.5 text-sm">{unreadCount} unread</p>}
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Notifications</h1>
+          {unreadCount > 0 && <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">{unreadCount} unread</p>}
         </div>
       </div>
 

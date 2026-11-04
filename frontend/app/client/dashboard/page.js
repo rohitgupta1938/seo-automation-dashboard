@@ -74,16 +74,16 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Welcome back, {user?.name?.split(' ')[0]}!</h1>
-        <p className="text-slate-500 mt-1 text-sm">Last audit: {formatDateTime(latestAudit?.completedAt)}</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome back, {user?.name?.split(' ')[0]}!</h1>
+        <p className="text-slate-500 mt-1 text-xs sm:text-sm">Last audit: {formatDateTime(latestAudit?.completedAt)}</p>
       </div>
 
       {/* Score Overview */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6">
-        <h2 className="font-semibold text-slate-800 mb-5">SEO Score Overview</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
+        <h2 className="font-semibold text-slate-800 text-sm sm:text-base mb-4 sm:mb-5">SEO Score Overview</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
           <SEOScoreCard score={result.overallScore} label="Overall" size="lg" />
           <SEOScoreCard score={result.technicalScore} label="Technical" />
           <SEOScoreCard score={result.onPageScore} label="On-Page" />
@@ -94,56 +94,56 @@ export default function ClientDashboard() {
       </div>
 
       {/* Issues Summary */}
-      <div className="grid grid-cols-3 gap-5">
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center">
-          <AlertCircle className="text-red-500 mx-auto mb-2" size={28} />
-          <p className="text-3xl font-bold text-red-600">{Array.isArray(result.criticalIssues) ? result.criticalIssues.length : 0}</p>
-          <p className="text-sm text-red-700 font-medium mt-1">Critical Issues</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 sm:p-5 text-center">
+          <AlertCircle className="text-red-500 mx-auto mb-2" size={26} />
+          <p className="text-2xl sm:text-3xl font-bold text-red-600">{Array.isArray(result.criticalIssues) ? result.criticalIssues.length : 0}</p>
+          <p className="text-xs sm:text-sm text-red-700 font-medium mt-1">Critical Issues</p>
         </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
-          <AlertTriangle className="text-amber-500 mx-auto mb-2" size={28} />
-          <p className="text-3xl font-bold text-amber-600">{Array.isArray(result.importantIssues) ? result.importantIssues.length : 0}</p>
-          <p className="text-sm text-amber-700 font-medium mt-1">Important Issues</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 text-center">
+          <AlertTriangle className="text-amber-500 mx-auto mb-2" size={26} />
+          <p className="text-2xl sm:text-3xl font-bold text-amber-600">{Array.isArray(result.importantIssues) ? result.importantIssues.length : 0}</p>
+          <p className="text-xs sm:text-sm text-amber-700 font-medium mt-1">Important Issues</p>
         </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center">
-          <Zap className="text-emerald-500 mx-auto mb-2" size={28} />
-          <p className="text-3xl font-bold text-emerald-600">{Array.isArray(result.quickWins) ? result.quickWins.length : 0}</p>
-          <p className="text-sm text-emerald-700 font-medium mt-1">Quick Wins</p>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 text-center">
+          <Zap className="text-emerald-500 mx-auto mb-2" size={26} />
+          <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{Array.isArray(result.quickWins) ? result.quickWins.length : 0}</p>
+          <p className="text-xs sm:text-sm text-emerald-700 font-medium mt-1">Quick Wins</p>
         </div>
       </div>
 
       {/* GSC Stats */}
       {gsc.rows && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-2">
               <MousePointer size={16} className="text-teal-500" />
-              <p className="text-xs font-medium text-slate-500 uppercase">Total Clicks</p>
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Total Clicks</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{gsc.totalClicks?.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">{gsc.totalClicks?.toLocaleString()}</p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-2">
               <Eye size={16} className="text-blue-500" />
-              <p className="text-xs font-medium text-slate-500 uppercase">Impressions</p>
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Impressions</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{gsc.totalImpressions?.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">{gsc.totalImpressions?.toLocaleString()}</p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-2">
               <Percent size={16} className="text-amber-500" />
-              <p className="text-xs font-medium text-slate-500 uppercase">Avg CTR</p>
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Avg CTR</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">
               {gsc.rows ? (gsc.rows.reduce((s, r) => s + r.ctr, 0) / gsc.rows.length * 100).toFixed(1) : 0}%
             </p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-2">
               <MapPin size={16} className="text-purple-500" />
-              <p className="text-xs font-medium text-slate-500 uppercase">Avg Position</p>
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Avg Position</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900">
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">
               #{gsc.rows ? Math.round(gsc.rows.reduce((s, r) => s + r.position, 0) / gsc.rows.length) : 0}
             </p>
           </div>
@@ -152,28 +152,30 @@ export default function ClientDashboard() {
 
       {/* SEO Score Trend */}
       {trendData.length > 1 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">SEO Score Trend</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="overall" stroke="#14b8a6" strokeWidth={2} dot={false} name="Overall" />
-              <Line type="monotone" dataKey="technical" stroke="#3b82f6" strokeWidth={2} dot={false} name="Technical" />
-              <Line type="monotone" dataKey="onPage" stroke="#f59e0b" strokeWidth={2} dot={false} name="On-Page" />
-            </LineChart>
-          </ResponsiveContainer>
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
+          <h3 className="font-semibold text-slate-800 text-sm sm:text-base mb-4">SEO Score Trend</h3>
+          <div className="w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Line type="monotone" dataKey="overall" stroke="#14b8a6" strokeWidth={2} dot={false} name="Overall" />
+                <Line type="monotone" dataKey="technical" stroke="#3b82f6" strokeWidth={2} dot={false} name="Technical" />
+                <Line type="monotone" dataKey="onPage" stroke="#f59e0b" strokeWidth={2} dot={false} name="On-Page" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
 
       {/* Keyword Rankings */}
       {gsc.rows && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">Keyword Performance (Google Search Console)</h3>
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs">
+          <h3 className="font-semibold text-slate-800 text-sm sm:text-base mb-4">Keyword Performance (Google Search Console)</h3>
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
